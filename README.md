@@ -65,3 +65,12 @@ package.json   dependencies dan script
 Week7(feat): add status and product API endpoints
 Week7(feat): add services, order flow, and server status page
 ```
+
+<img width="1919" height="858" alt="image" src="https://github.com/user-attachments/assets/5ff60053-ae91-4dd8-bc76-fdc30d1abcf0" />
+
+<img width="1918" height="987" alt="image" src="https://github.com/user-attachments/assets/f28ccb1f-d092-4090-af23-50a0dc67ec9a" />
+
+<img width="1917" height="950" alt="image" src="https://github.com/user-attachments/assets/35b6d533-d914-437a-afdb-4721217fa126" />
+
+
+
