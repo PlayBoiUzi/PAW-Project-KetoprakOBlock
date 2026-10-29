@@ -1,0 +1,142 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="max-w-3xl mx-auto px-5 mt-10">
+  <h1 class="font-serif text-3xl font-bold">Buat pesanan</h1>
+  <p class="mt-1 text-sm text-kacang/70">Pesanan dikirim ke <code>POST /api/pesanan</code> dan langsung muncul di antrean dapur.</p>
+
+  <form id="form-pesan" class="mt-6" novalidate>
+    <div class="grid gap-4 sm:grid-cols-3 rounded-lg bg-white border border-kacang/15 p-5">
+      <label class="block text-sm font-semibold">Nama pelanggan
+        <input id="nama" type="text" class="mt-1 w-full rounded border border-kacang/30 px-3 py-2 font-normal" placeholder="Contoh: Rafi">
+      </label>
+      <label class="block text-sm font-semibold">Nomor meja (opsional)
+        <input id="meja" type="text" class="mt-1 w-full rounded border border-kacang/30 px-3 py-2 font-normal" placeholder="Contoh: 4">
+      </label>
+      <label class="block text-sm font-semibold">Tipe pesanan
+        <select id="tipe" class="mt-1 w-full rounded border border-kacang/30 px-3 py-2 font-normal bg-white">
+          <option value="makan_di_tempat">Makan di tempat</option>
+          <option value="bawa_pulang">Bawa pulang</option>
+        </select>
+      </label>
+    </div>
+
+    <ul class="mt-5 space-y-3">
+      <% produk.forEach(function (p) { %>
+        <li data-produk data-id="<%= p.id %>" data-harga="<%= p.harga %>" data-kategori="<%= p.kategori %>" data-qty="0"
+            class="rounded-lg bg-white border border-kacang/15 p-4">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h3 class="font-bold"><%= p.nama %></h3>
+              <p class="text-sm text-cabe font-bold"><%= formatRupiah(p.harga) %></p>
+            </div>
+            <div class="flex items-center gap-3">
+              <button type="button" data-aksi="kurang" class="h-9 w-9 rounded border border-kacang/30 text-lg font-bold" aria-label="Kurangi <%= p.nama %>">-</button>
+              <span data-qty-label class="w-6 text-center font-bold">0</span>
+              <button type="button" data-aksi="tambah" class="h-9 w-9 rounded bg-kacang text-kertas text-lg font-bold" aria-label="Tambah <%= p.nama %>">+</button>
+            </div>
+          </div>
+          <% if (p.kategori === 'Makanan') { %>
+            <div data-opsi class="hidden mt-3 pt-3 border-t border-kacang/10 flex flex-wrap items-center gap-4 text-sm">
+              <label>Level pedas
+                <select data-pedas class="ml-1 rounded border border-kacang/30 px-2 py-1 bg-white">
+                  <% for (var i = 0; i <= 5; i++) { %><option value="<%= i %>"><%= i %></option><% } %>
+                </select>
+              </label>
+              <label class="inline-flex items-center gap-2"><input type="checkbox" data-bawang> Tanpa bawang</label>
+            </div>
+          <% } %>
+        </li>
+      <% }) %>
+    </ul>
+
+    <div class="mt-6 rounded-lg bg-white border border-kacang/15 p-5 flex items-center justify-between gap-4 flex-wrap">
+      <div>
+        <p class="text-sm text-kacang/70">Total</p>
+        <p id="total" class="text-2xl font-bold text-cabe">Rp 0</p>
+      </div>
+      <button type="submit" id="btn-kirim" class="rounded bg-cabe px-6 py-3 font-bold text-white hover:bg-red-700 disabled:opacity-50">Kirim pesanan</button>
+    </div>
+
+    <div id="pesan-hasil" class="mt-4 hidden rounded-lg p-4 text-sm" role="status"></div>
+  </form>
+</main>
+
+<%- include('partials/footer') %>
+
+<script>
+  var rows = document.querySelectorAll('[data-produk]');
+  var totalEl = document.getElementById('total');
+  var hasil = document.getElementById('pesan-hasil');
+  var rupiah = function (n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); };
+
+  function hitung() {
+    var total = 0;
+    rows.forEach(function (r) {
+      var qty = Number(r.dataset.qty);
+      total += qty * Number(r.dataset.harga);
+      r.querySelector('[data-qty-label]').textContent = qty;
+      var opsi = r.querySelector('[data-opsi]');
+      if (opsi) opsi.classList.toggle('hidden', qty === 0);
+    });
+    totalEl.textContent = rupiah(total);
+  }
+
+  function tampil(pesan, ok) {
+    hasil.className = 'mt-4 rounded-lg p-4 text-sm ' + (ok ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900');
+    hasil.innerHTML = pesan;
+  }
+
+  document.querySelectorAll('[data-aksi]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var row = btn.closest('[data-produk]');
+      var qty = Number(row.dataset.qty) + (btn.dataset.aksi === 'tambah' ? 1 : -1);
+      row.dataset.qty = Math.max(0, Math.min(20, qty));
+      hitung();
+    });
+  });
+
+  document.getElementById('form-pesan').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var items = [];
+    rows.forEach(function (r) {
+      var qty = Number(r.dataset.qty);
+      if (qty < 1) return;
+      var pedas = r.querySelector('[data-pedas]');
+      var bawang = r.querySelector('[data-bawang]');
+      items.push({
+        produkId: Number(r.dataset.id),
+        qty: qty,
+        pedas: pedas ? Number(pedas.value) : 0,
+        tanpaBawang: bawang ? bawang.checked : false
+      });
+    });
+
+    var btn = document.getElementById('btn-kirim');
+    btn.disabled = true;
+    fetch('/api/pesanan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nama: document.getElementById('nama').value,
+        meja: document.getElementById('meja').value,
+        tipe: document.getElementById('tipe').value,
+        items: items
+      })
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (!res.ok) {
+          tampil('<strong>Pesanan belum terkirim:</strong><ul class="list-disc ml-5 mt-1">' +
+            res.d.pesan.map(function (m) { return '<li>' + m + '</li>'; }).join('') + '</ul>', false);
+          return;
+        }
+        tampil('Pesanan <strong>' + res.d.data.kode + '</strong> terkirim. Total ' + rupiah(res.d.data.total) +
+          '. <a href="/pesanan" class="font-bold underline">Lihat antrean dapur</a>', true);
+        rows.forEach(function (r) { r.dataset.qty = 0; });
+        hitung();
+      })
+      .catch(function () { tampil('Server tidak merespons. Cek apakah server masih berjalan.', false); })
+      .finally(function () { btn.disabled = false; });
+  });
+</script>

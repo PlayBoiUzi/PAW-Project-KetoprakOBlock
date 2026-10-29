@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | <%= app.name %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { kacang: '#3b2316', cabe: '#c8321e', daun: '#2e6b3d', kertas: '#f7f4ef' },
+          fontFamily: { sans: ['"Trebuchet MS"', 'Verdana', 'sans-serif'], serif: ['Georgia', 'serif'] }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-kertas text-kacang font-sans antialiased">

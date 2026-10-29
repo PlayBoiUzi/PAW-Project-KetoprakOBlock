@@ -1,0 +1,15 @@
+{
+  "name": "paw-project-ketoprakoblock",
+  "version": "1.0.0",
+  "description": "Ketoprak O-block - Week 7: Frontend, REST API, dan Middleware Logger (Express.js + EJS + Tailwind CDN, pola MVC)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.2"
+  }
+}

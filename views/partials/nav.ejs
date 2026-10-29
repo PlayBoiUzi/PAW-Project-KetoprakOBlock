@@ -1,0 +1,11 @@
+<% var aktif = locals.halaman || ''; %>
+<nav class="bg-kacang text-kertas border-b border-kertas/10">
+  <div class="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
+    <a href="/" class="font-serif font-bold text-lg"><%= app.name %></a>
+    <div class="flex gap-1 text-sm font-semibold">
+      <a href="/" class="px-3 py-1.5 rounded <%= aktif === 'beranda' ? 'bg-kertas text-kacang' : 'hover:bg-kertas/10' %>">Beranda</a>
+      <a href="/pesan" class="px-3 py-1.5 rounded <%= aktif === 'pesan' ? 'bg-kertas text-kacang' : 'hover:bg-kertas/10' %>">Buat pesanan</a>
+      <a href="/pesanan" class="px-3 py-1.5 rounded <%= aktif === 'pesanan' ? 'bg-kertas text-kacang' : 'hover:bg-kertas/10' %>">Antrean dapur</a>
+    </div>
+  </div>
+</nav>

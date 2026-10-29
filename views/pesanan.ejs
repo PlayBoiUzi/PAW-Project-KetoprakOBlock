@@ -1,0 +1,101 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="max-w-5xl mx-auto px-5 mt-10">
+  <h1 class="font-serif text-3xl font-bold">Antrean dapur</h1>
+  <p class="mt-1 text-sm text-kacang/70">Data dari <code>GET /api/pesanan</code>. Ubah status lewat <code>PATCH /api/pesanan/:id/status</code>.</p>
+
+  <section class="mt-6 grid gap-3 grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-lg bg-white border border-kacang/15 p-4">
+      <p class="text-xs text-kacang/70">Omzet hari ini</p>
+      <p class="mt-1 text-xl font-bold text-cabe"><%= formatRupiah(ringkasan.omzet) %></p>
+    </div>
+    <div class="rounded-lg bg-white border border-kacang/15 p-4">
+      <p class="text-xs text-kacang/70">Pesanan hari ini</p>
+      <p class="mt-1 text-xl font-bold"><%= ringkasan.total_pesanan %></p>
+    </div>
+    <div class="rounded-lg bg-white border border-kacang/15 p-4">
+      <p class="text-xs text-kacang/70">Porsi terjual</p>
+      <p class="mt-1 text-xl font-bold"><%= ringkasan.total_porsi %></p>
+    </div>
+    <div class="rounded-lg bg-white border border-kacang/15 p-4">
+      <p class="text-xs text-kacang/70">Belum selesai</p>
+      <p class="mt-1 text-xl font-bold"><%= ringkasan.per_status.baru + ringkasan.per_status.diproses + ringkasan.per_status.siap %></p>
+    </div>
+  </section>
+
+  <% var label = { baru: 'Baru', diproses: 'Diproses', siap: 'Siap diambil', selesai: 'Selesai' };
+     var warna = { baru: 'bg-yellow-100 text-yellow-900', diproses: 'bg-blue-100 text-blue-900', siap: 'bg-green-100 text-green-900', selesai: 'bg-kacang/10 text-kacang' };
+     var berikut = { baru: ['diproses', 'Proses pesanan'], diproses: ['siap', 'Tandai siap'], siap: ['selesai', 'Tandai selesai'] }; %>
+
+  <% if (pesanan.length === 0) { %>
+    <section class="mt-8 rounded-lg border border-dashed border-kacang/30 p-10 text-center">
+      <p class="font-bold">Belum ada pesanan masuk.</p>
+      <p class="mt-1 text-sm text-kacang/70">Buat pesanan pertama dan akan muncul di sini.</p>
+      <a href="/pesan" class="mt-4 inline-block rounded bg-cabe px-5 py-2 font-bold text-white">Buat pesanan</a>
+    </section>
+  <% } else { %>
+    <ul class="mt-8 space-y-4">
+      <% pesanan.forEach(function (p) { %>
+        <li class="rounded-lg bg-white border border-kacang/15 p-5">
+          <div class="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <h2 class="font-bold text-lg"><%= p.kode %> <span class="font-normal">atas nama <%= p.nama %></span></h2>
+              <p class="text-sm text-kacang/70">
+                <%= p.tipe === 'bawa_pulang' ? 'Bawa pulang' : 'Makan di tempat' %><%= p.meja ? ', meja ' + p.meja : '' %>,
+                <%= new Date(p.dibuat).toLocaleTimeString('id-ID') %>
+              </p>
+            </div>
+            <span class="rounded px-2.5 py-1 text-xs font-bold <%= warna[p.status] %>"><%= label[p.status] %></span>
+          </div>
+
+          <ul class="mt-3 text-sm space-y-1">
+            <% p.items.forEach(function (i) { %>
+              <li class="flex justify-between gap-3">
+                <span>
+                  <%= i.qty %> x <%= i.nama %>
+                  <% if (i.pedas > 0) { %><span class="text-cabe">(pedas <%= i.pedas %>)</span><% } %>
+                  <% if (i.tanpaBawang) { %><span class="text-kacang/70">(tanpa bawang)</span><% } %>
+                </span>
+                <span><%= formatRupiah(i.subtotal) %></span>
+              </li>
+            <% }) %>
+          </ul>
+
+          <div class="mt-4 pt-3 border-t border-kacang/10 flex items-center justify-between gap-3 flex-wrap">
+            <p class="font-bold">Total <%= formatRupiah(p.total) %></p>
+            <% if (berikut[p.status]) { %>
+              <button data-id="<%= p.id %>" data-status="<%= berikut[p.status][0] %>"
+                      class="btn-status rounded bg-daun px-4 py-2 text-sm font-bold text-white hover:bg-green-800">
+                <%= berikut[p.status][1] %>
+              </button>
+            <% } %>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</main>
+
+<%- include('partials/footer') %>
+
+<script>
+  document.querySelectorAll('.btn-status').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      fetch('/api/pesanan/' + btn.dataset.id + '/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: btn.dataset.status })
+      })
+        .then(function (r) {
+          if (!r.ok) throw new Error('gagal');
+          location.reload();
+        })
+        .catch(function () {
+          btn.disabled = false;
+          alert('Status gagal diubah. Cek apakah server masih berjalan.');
+        });
+    });
+  });
+</script>
