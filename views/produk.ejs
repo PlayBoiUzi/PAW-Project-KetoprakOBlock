@@ -1,0 +1,131 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="max-w-5xl mx-auto px-5 mt-10">
+  <h1 class="font-serif text-3xl font-bold">Kelola produk</h1>
+  <p class="mt-1 text-sm text-kacang/70">Data dari tabel <code>produk</code> di PostgreSQL lewat <code>/api/produk</code>.</p>
+
+  <form id="form-produk" class="mt-6 grid gap-4 sm:grid-cols-2 rounded-lg bg-white border border-kacang/15 p-5" novalidate>
+    <h2 id="judul-form" class="sm:col-span-2 font-bold text-lg">Tambah produk</h2>
+    <input type="hidden" id="f-id">
+    <label class="block text-sm font-semibold">Nama
+      <input id="f-nama" type="text" class="mt-1 w-full rounded border border-kacang/30 px-3 py-2 font-normal">
+    </label>
+    <label class="block text-sm font-semibold">Kategori
+      <select id="f-kategori" class="mt-1 w-full rounded border border-kacang/30 px-3 py-2 font-normal bg-white">
+        <option>Makanan</option><option>Tambahan</option><option>Minuman</option><option>Pre-order</option>
+      </select>
+    </label>
+    <label class="block text-sm font-semibold">Harga (Rp)
+      <input id="f-harga" type="number" min="0" class="mt-1 w-full rounded border border-kacang/30 px-3 py-2 font-normal">
+    </label>
+    <label class="block text-sm font-semibold">Kustomisasi (pisah koma)
+      <input id="f-kustomisasi" type="text" class="mt-1 w-full rounded border border-kacang/30 px-3 py-2 font-normal" placeholder="Level pedas 0-5, Tanpa bawang">
+    </label>
+    <label class="block text-sm font-semibold sm:col-span-2">Deskripsi
+      <textarea id="f-deskripsi" rows="2" class="mt-1 w-full rounded border border-kacang/30 px-3 py-2 font-normal"></textarea>
+    </label>
+    <label class="inline-flex items-center gap-2 text-sm font-semibold">
+      <input id="f-tersedia" type="checkbox" checked> Tersedia
+    </label>
+    <div class="sm:col-span-2 flex gap-3">
+      <button type="submit" class="rounded bg-cabe px-5 py-2 font-bold text-white hover:bg-red-700">Simpan</button>
+      <button type="button" id="btn-batal" class="hidden rounded border border-kacang/30 px-5 py-2 font-bold">Batal edit</button>
+    </div>
+    <div id="hasil" class="sm:col-span-2 hidden rounded-lg p-3 text-sm" role="status"></div>
+  </form>
+
+  <div class="mt-8 overflow-x-auto rounded-lg bg-white border border-kacang/15">
+    <table class="w-full text-sm">
+      <thead class="bg-kacang/5 text-left">
+        <tr><th class="p-3">ID</th><th class="p-3">Nama</th><th class="p-3">Kategori</th><th class="p-3">Harga</th><th class="p-3">Status</th><th class="p-3">Aksi</th></tr>
+      </thead>
+      <tbody>
+        <% produk.forEach(function (p) { %>
+          <tr class="border-t border-kacang/10" data-json="<%= JSON.stringify(p) %>">
+            <td class="p-3"><%= p.id %></td>
+            <td class="p-3 font-semibold"><%= p.nama %></td>
+            <td class="p-3"><%= p.kategori %></td>
+            <td class="p-3"><%= formatRupiah(p.harga) %></td>
+            <td class="p-3"><%= p.tersedia ? 'Tersedia' : 'Belum tersedia' %></td>
+            <td class="p-3 whitespace-nowrap">
+              <button data-aksi="edit" class="rounded bg-daun px-3 py-1 font-bold text-white">Edit</button>
+              <button data-aksi="hapus" class="rounded bg-cabe px-3 py-1 font-bold text-white">Hapus</button>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<%- include('partials/footer') %>
+
+<script>
+  var $ = function (id) { return document.getElementById(id); };
+  var hasil = $('hasil');
+
+  function tampil(pesan, ok) {
+    hasil.className = 'sm:col-span-2 rounded-lg p-3 text-sm ' + (ok ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900');
+    hasil.textContent = Array.isArray(pesan) ? pesan.join(' ') : pesan;
+  }
+
+  function resetForm() {
+    $('form-produk').reset();
+    $('f-id').value = '';
+    $('f-tersedia').checked = true;
+    $('judul-form').textContent = 'Tambah produk';
+    $('btn-batal').classList.add('hidden');
+  }
+
+  $('btn-batal').addEventListener('click', resetForm);
+
+  document.querySelector('tbody').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-aksi]');
+    if (!btn) return;
+    var p = JSON.parse(btn.closest('tr').dataset.json);
+
+    if (btn.dataset.aksi === 'edit') {
+      $('f-id').value = p.id;
+      $('f-nama').value = p.nama;
+      $('f-kategori').value = p.kategori;
+      $('f-harga').value = p.harga;
+      $('f-kustomisasi').value = p.kustomisasi.join(', ');
+      $('f-deskripsi').value = p.deskripsi;
+      $('f-tersedia').checked = p.tersedia;
+      $('judul-form').textContent = 'Edit produk #' + p.id;
+      $('btn-batal').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (!confirm('Hapus "' + p.nama + '"?')) return;
+    fetch('/api/produk/' + p.id, { method: 'DELETE' })
+      .then(function (r) { if (!r.ok) throw new Error(); location.reload(); })
+      .catch(function () { tampil('Produk gagal dihapus.', false); });
+  });
+
+  $('form-produk').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var id = $('f-id').value;
+    var body = {
+      nama: $('f-nama').value,
+      kategori: $('f-kategori').value,
+      harga: $('f-harga').value,
+      kustomisasi: $('f-kustomisasi').value,
+      deskripsi: $('f-deskripsi').value,
+      tersedia: $('f-tersedia').checked
+    };
+    fetch(id ? '/api/produk/' + id : '/api/produk', {
+      method: id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (!res.ok) return tampil(res.d.pesan, false);
+        location.reload();
+      })
+      .catch(function () { tampil('Server tidak merespons.', false); });
+  });
+</script>
