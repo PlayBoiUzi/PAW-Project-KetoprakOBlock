@@ -1,4 +1,4 @@
-# Ketoprak O-block (PAW Week 7)
+# Ketoprak O-block
 
 Frontend, REST API, dan Middleware Logger menggunakan Express.js, EJS, Tailwind CSS (CDN), dengan pola MVC.
 Data produk masih statis (tanpa database).
