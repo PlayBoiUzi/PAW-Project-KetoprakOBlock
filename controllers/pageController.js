@@ -5,34 +5,45 @@ const config = require('../config/config');
 const { formatRupiah } = require('../utils/format');
 
 const PageController = {
-  home(req, res) {
+  async home(req, res) {
     res.render('index', {
       title: 'Beranda',
       halaman: 'beranda',
       app: config.app,
-      produk: ProdukModel.getAll(),
+      produk: await ProdukModel.getAll(),
       layanan: LayananModel.getAll(),
       formatRupiah,
     });
   },
 
-  pesan(req, res) {
+  async pesan(req, res) {
+    const semua = await ProdukModel.getAll();
     res.render('pesan', {
       title: 'Buat Pesanan',
       halaman: 'pesan',
       app: config.app,
-      produk: ProdukModel.getAll().filter((p) => p.tersedia),
+      produk: semua.filter((p) => p.tersedia),
       formatRupiah,
     });
   },
 
-  antrean(req, res) {
+  async antrean(req, res) {
     res.render('pesanan', {
       title: 'Antrean Dapur',
       halaman: 'pesanan',
       app: config.app,
-      pesanan: PesananModel.getAll().slice().reverse(),
-      ringkasan: PesananModel.ringkasanHariIni(),
+      pesanan: (await PesananModel.getAll()).reverse(),
+      ringkasan: await PesananModel.ringkasanHariIni(),
+      formatRupiah,
+    });
+  },
+
+  async produk(req, res) {
+    res.render('produk', {
+      title: 'Kelola Produk',
+      halaman: 'produk',
+      app: config.app,
+      produk: await ProdukModel.getAll(),
       formatRupiah,
     });
   },
