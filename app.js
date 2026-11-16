@@ -5,8 +5,10 @@ const config = require('./config/config');
 const pool = require('./config/db');
 const logger = require('./middlewares/logger');
 const pageRoutes = require('./routes/pageRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 const apiRoutes = require('./routes/apiRoutes');
 const PageController = require('./controllers/pageController');
+
 
 const app = express();
 
@@ -23,6 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/', pageRoutes);
+app.use('/api/chat', chatRoutes);
 app.use('/api', apiRoutes);
 
 // 404 untuk path yang tidak dikenal

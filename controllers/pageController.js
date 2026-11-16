@@ -48,6 +48,14 @@ const PageController = {
     });
   },
 
+    chat(req, res) {
+    res.render('chat', {
+      title: 'Tanya Asisten',
+      halaman: 'chat',
+      app: config.app,
+    });
+  },
+
   notFound(req, res) {
     res.status(404).render('404', { title: 'Halaman tidak ditemukan', halaman: '', app: config.app });
   },
